@@ -362,7 +362,7 @@ def launch(port: int = 8000,
         log_filename = "boggartd.log"
         log_filename = os.path.join(os.getcwd(), log_filename)
 
-    log_to_file = logging.handlers.WatchedFileHandler(log_filename)
+    log_to_file = logging.handlers.WatchedFileHandler(log_filename, mode='w')
     log_to_file.setLevel(logging.DEBUG)
     log_to_file.setFormatter(log_formatter)
 
