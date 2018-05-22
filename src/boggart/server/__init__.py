@@ -112,7 +112,11 @@ def throws_errors(func):
         try:
             return func(*args, **kwargs)
         except ClientServerError as err:
+            logger.exception("encountered an error while handling request: %s", err.message)  # noqa: pycodestyle
             return err.to_response()
+        except Exception as err:
+            logger.exception("encountered unexpected error while handling request: %s", e)  # noqa: pycodestyle
+            return UnexpectedServerError(err).to_response()
     return wrapper
 
 
@@ -331,17 +335,26 @@ def mutations(name_snapshot: str, filepath: str):
         operators = list(installation.operators)
 
     # TODO implement line restriction
+    try:
+        mutations = installation.mutations(snapshot,
+                                           filepath,
+                                           language=language,
+                                           operators=operators)
+    except BoggartException as e:
+        logger.exception("failed to find mutations due to error: %s", e.message)  # noqa: pycodestyle
+        raise
+    except Exception as e:
+        logger.exception("failed to find mutations due to unexpected error: %s", e)  # noqa: pycodestyle
+        raise
 
-    mutations = installation.mutations(snapshot,
-                                       filepath,
-                                       language=language,
-                                       operators=operators)
     logger.info("found %d mutations of file '%s' in snapshot '%s' that satisfy the given constraints.",  # noqa: pycodestyle
                 len(mutations),
                 filepath,
                 name_snapshot)
 
+    logger.debug("serialising discovered mutations")
     jsn = [m.to_dict() for m in mutations]
+    logger.debug("serialised discovered mutations")
     return jsn
 
 
