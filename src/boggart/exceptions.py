@@ -144,6 +144,10 @@ class UnexpectedServerError(ClientServerError):
     The server encountered an unexpected error.
     """
     @staticmethod
+    def from_exception(ex: Exception) -> 'UnexpectedServerError':
+        return UnexpectedServerError(str(ex))
+
+    @staticmethod
     def from_data(data: dict) -> 'UnexpectedServerError':
         assert 'message' in data
         return UnexpectedServerError(data['message'])
