@@ -254,12 +254,10 @@ class SourceFileManager(object):
         # TODO ensure all replacements are in the same file
         # TODO sort replacements by the start of their affected character range
         # TODO ensure no replacements are conflicting
-        logger.debug("Applying replacements to source file, '%s/%s': %s",
-                     snapshot.name, filename,
-                     replacements)
+        logger.debug("applying replacements to source file, '%s/%s': %s",
+                     snapshot.name, filename, replacements)
         content = self.read_file(snapshot, filename)
         for replacement in replacements:
-            # convert location to character offset range
             location = replacement.location
             start_at = self.line_col_to_offset(snapshot,
                                                filename,
@@ -270,8 +268,8 @@ class SourceFileManager(object):
                                               location.stop.line,
                                               location.stop.column)
             content = \
-                content[:start_at] + replacement.text + content[stop_at + 1:]
-        logger.debug("Applied replacements to source file, '%s/%s': %s:\n%s",
+                content[:start_at] + replacement.text + content[stop_at:]
+        logger.debug("applied replacements to source file, '%s/%s': %s:\n%s",
                      snapshot.name, filename,
                      replacements,
                      content)
