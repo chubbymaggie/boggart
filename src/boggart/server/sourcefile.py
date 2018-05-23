@@ -1,6 +1,7 @@
 from typing import Dict, Tuple, List
 import logging
 
+from bugzoo.core.patch import Patch
 from bugzoo.core.bug import Bug
 from bugzoo.client import Client as BugZooClient
 
@@ -90,7 +91,7 @@ class SourceFileManager(object):
     def replacements_to_diff(self,
                              snapshot: Bug,
                              file_to_replacements: Dict[str, List[Replacement]]
-                             ) -> bugzoo.core.Patch:
+                             ) -> Patch:
         """
         Transforms a set of replacements into a unified diff for a given
         snapshot.
