@@ -87,6 +87,18 @@ class SourceFileManager(object):
                      offset)
         return offset
 
+    def mutations_to_diff(self,
+                          snapshot: Bug,
+                          mutations: List[Mutation]
+                          ) -> Patch:
+        """
+        Transforms a list of mutations to a given snapshot into a unified diff
+        that can be applied to that snapshot.
+        """
+        replacements = self.mutations_to_replacements(snapshot, mutations)
+        diff = self.replacements_to_diff(snapshot, replacements)
+        return diff
+
     def mutations_to_replacements(self,
                                   snapshot: Bug,
                                   mutations: List[Mutation]
@@ -108,7 +120,7 @@ class SourceFileManager(object):
         file_to_replacements = {}  # type: Dict[str, List[Replacement]]
         for mutation in mutations:
             fn = mutation.location.filename
-            if fn not in replacements_in_file:
+            if fn not in file_to_replacements:
                 file_to_replacements[fn] = []
             replacement = self.mutation_to_replacement(mutation)
             file_to_replacements[fn].append(replacement)
