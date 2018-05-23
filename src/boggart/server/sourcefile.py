@@ -4,7 +4,7 @@ import logging
 from bugzoo.core.bug import Bug
 from bugzoo.client import Client as BugZooClient
 
-from ..core import FileLocationRange, Replacement
+from ..core import FileLocationRange, Replacement, Mutation
 from ..exceptions import *
 
 logger = logging.getLogger(__name__)
@@ -77,6 +77,49 @@ class SourceFileManager(object):
                      line_col_s,
                      offset)
         return offset
+
+    def mutation_to_replacement(self,
+                                snapshot: Bug,
+                                mutation: Mutation
+                                ) -> Replacement:
+        """
+        Transforms a given mutation to a snapshot into a replacement.
+        """
+        raise NotImplementedError
+
+    def replacements_to_diff(self,
+                             snapshot: Bug,
+                             file_to_replacements: Dict[str, List[Replacement]]
+                             ) -> bugzoo.core.Patch:
+        """
+        Transforms a set of replacements into a unified diff for a given
+        snapshot.
+
+        Parameters:
+            snapshot: the snapshot to which the replacements should be
+                applied.
+            file_to_replacements: a mapping from files, indexed by their path
+                relative to the source directory for the snapshot, to
+                replacements in that file.
+
+        Returns:
+            a unified diff that applies all of the given replacements to the
+            source code for the given snapshot.
+        """
+        logger.debug("transforming replacements to diff")
+        file_diffs = []  # type: List[str]
+        for (filename, replacements) in file_to_replacements.values():
+            original = self.read_file(snapshot, filename)
+            mutated = self.apply(snapshot, filename, replacements)
+            diff = ''.join(unified_diff(original.splitlines(True),
+                                        mutated.splitlines(True),
+                                        filename, filename))
+            logger.debug("transformed replacements to file to diff:\n%s", diff)
+            file_diffs.append(diff)
+        diff_s = '\n'.join(file_diffs)
+        logger.debug("transformed mutations to diff:\n%s", diff_s)
+        diff = Patch.from_unidiff('\n'.join(file_diffs))
+        return diff
 
     def read_file(self, snapshot: Bug, filepath: str) -> str:
         """

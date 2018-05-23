@@ -128,6 +128,7 @@ class MutantManager(object):
             if filename not in replacements_in_file:
                 replacements_in_file[filename] = []
 
+            # FIXME use source manager
             operator = self.__operators[mutation.operator]
             transformation = \
                 operator.transformations[mutation.transformation_index]
@@ -141,25 +142,8 @@ class MutantManager(object):
             replacements_in_file[filename].append(replacement)
         logger.debug("Transformed mutations to replacements: %s",
                      replacements_in_file)
-
-        # transform the replacements to a diff
-        logger.debug("Transforming replacements to diff")
-        file_diffs = []  # type: List[str]
-        for filename in replacements_in_file:
-            original = self.__sources.read_file(snapshot, filename)
-            mutated = self.__sources.apply(snapshot,
-                                           filename,
-                                           replacements_in_file[filename])
-            diff = ''.join(unified_diff(original.splitlines(True),
-                                        mutated.splitlines(True),
-                                        filename,
-                                        filename))
-            logger.debug("Transformed replacements to file to diff:\n%s",
-                         diff)
-            file_diffs.append(diff)
-        diff_s = '\n'.join(file_diffs)
-        logger.info("Transformed mutations to diff:\n%s", diff_s)
-        mutant_diff = Patch.from_unidiff('\n'.join(file_diffs))
+        mutant_diff = \
+            self.__sources.replacements_to_diff(replacements_in_file)
 
         # generate the Docker image on the BugZoo server
         logger.debug("Provisioning container to persist mutant as a snapshot")
