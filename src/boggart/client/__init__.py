@@ -119,7 +119,7 @@ class Client(object):
         """
         Transforms a given set of mutations to a snapshot into a unified diff.
         """
-        logger.info("transforming mutations to snapshot [%s] into a diff", # noqa: pycodestyle
+        logger.info("transforming mutations to snapshot [%s] into a diff",  # noqa: pycodestyle
                     snapshot.name)
         path = "diff/mutations/{}".format(snapshot.name)
         payload = {
