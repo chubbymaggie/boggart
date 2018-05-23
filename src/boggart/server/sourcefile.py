@@ -1,4 +1,5 @@
 from typing import Dict, Tuple, List
+from difflib import unified_diff
 import logging
 
 from bugzoo.core.patch import Patch

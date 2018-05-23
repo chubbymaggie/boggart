@@ -1,7 +1,6 @@
 # TODO mutants are killed when the server is killed
 from typing import List, Iterator, Dict
 from uuid import UUID, uuid4
-from difflib import unified_diff
 import tempfile
 import logging
 
