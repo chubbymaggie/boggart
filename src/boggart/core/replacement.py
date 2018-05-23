@@ -13,7 +13,11 @@ class Replacement(object):
                  text: str
                  ) -> None:
         self.__location = location
-        self.__text = text
+        self.__text = texts
+
+    def __repr__(self) -> str:
+        return "Replacement({}, {})".format(repr(self.location),
+                                            self.text)
 
     @property
     def filename(self) -> str:
