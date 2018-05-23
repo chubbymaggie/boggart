@@ -87,6 +87,35 @@ class SourceFileManager(object):
                      offset)
         return offset
 
+    def mutations_to_replacements(self,
+                                  snapshot: Bug,
+                                  mutations: List[Mutation]
+                                  ) -> Dict[str, List[Replacement]]:
+        """
+        Transforms a list of mutations to a given snapshot into a set of
+        source code replacements.
+
+        Parameters:
+            snapshot: the snapshot to which the mutations should be applied.
+            mutations: the mutations to apply to the snapshot.
+
+        Returns:
+            a mapping from (modified) files in the snapshot, given by their
+            paths relative to the source directory for the snapshot, to a list
+            of source code replacements in that file.
+        """
+        logger.debug("transforming mutations into replacements")
+        file_to_replacements = {}  # type: Dict[str, List[Replacement]]
+        for mutation in mutations:
+            fn = mutation.location.filename
+            if fn not in replacements_in_file:
+                file_to_replacements[fn] = []
+            replacement = self.mutation_to_replacement(mutation)
+            file_to_replacements[fn].append(replacement)
+        logger.debug("transformed mutations to replacements: %s",
+                     file_to_replacements)
+        return file_to_replacements
+
     def mutation_to_replacement(self,
                                 snapshot: Bug,
                                 mutation: Mutation

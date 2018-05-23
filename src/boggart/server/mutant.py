@@ -94,61 +94,38 @@ class MutantManager(object):
             "higher-order mutation is currently unsupported"
 
         # NOTE this is *incredibly* unlikely to conflict
-        logging.debug("Generating UUID for mutant...")
+        logging.debug("generating UUID for mutant...")
         uuid = uuid4()
-        logger.debug("Generated UUID for mutant: %s", uuid.hex)
+        logger.debug("generated UUID for mutant: %s", uuid.hex)
         try:
             assert uuid not in self.__mutants, "UUID already in use."
         except AssertionError:
-            logger.exception("Automatically generated UUID is already in use: %s",  # noqa: pycodestyle
+            logger.exception("automatically generated UUID is already in use: %s",  # noqa: pycodestyle
                              uuid)
             raise
-        logger.debug("Constructing mutation description...")
+        logger.debug("constructing mutation description...")
         mutant = Mutant(uuid, snapshot.name, mutations)
-        logger.debug("Constructed mutant description: %s", mutant)
+        logger.debug("constructed mutant description: %s", mutant)
 
-        # group mutations by file
-        logger.debug("Grouping mutations by file")
-        file_mutations = {}  # type: Dict[str, List[Mutation]]
-        for mutation in mutant.mutations:
-            location = mutation.location
-            filename = location.filename
-
-            if filename not in file_mutations:
-                file_mutations[filename] = []
-            file_mutations[filename].append(mutation)
-        logger.debug("Grouped mutations by file: %s", file_mutations)
-
-        # transform each mutation into a replacement and group by file
-        logger.debug("transforming mutations into replacements")
-        replacements_in_file = {}  # type: Dict[str, List[Replacement]]
-        for mutation in mutant.mutations:
-            filename = mutation.location.filename
-            if filename not in replacements_in_file:
-                replacements_in_file[filename] = []
-            replacement = self.__sources.mutation_to_replacement(mutation)
-            replacements_in_file[filename].append(replacement)
-        logger.debug("transformed mutations to replacements: %s",
-                     replacements_in_file)
+        # generate a diff for the mutant
+        replacements_in_file = self.__sources(snapshot, mutant.mutations)
         mutant_diff = \
             self.__sources.replacements_to_diff(replacements_in_file)
 
         # generate the Docker image on the BugZoo server
-        logger.debug("Provisioning container to persist mutant as a snapshot")
+        logger.debug("provisioning container to persist mutant as a snapshot")
         container = bz.containers.provision(snapshot)
-        logger.debug("Provisioned container, %s, for mutant, %s",
-                     container.uid,
-                     mutant.uuid.hex)
+        logger.debug("provisioned container [%s] for mutant [%s].",
+                     container.uid, mutant.uuid.hex)
         try:
-            logger.debug("Applying mutation patch to original source code.")
+            logger.debug("applying mutation patch to original source code.")
             bz.containers.patch(container, diff)
-            logger.debug("Applied mutation patch to original source code.")
+            logger.debug("applied mutation patch to original source code.")
             bz.containers.persist(container, mutant.docker_image)
         finally:
             del bz.containers[container.uid]
-            logger.debug("Destroyed temporary container, %s, for mutant, %s",
-                         container.uid,
-                         mutant.uuid.hex)
+            logger.debug("destroyed temporary container [%s] for mutant [%s].",
+                         container.uid, mutant.uuid.hex)
 
         # build and register a BugZoo snapshot
         files_to_instrument = snapshot.files_to_instrument
