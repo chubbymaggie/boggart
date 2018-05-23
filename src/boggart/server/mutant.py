@@ -108,9 +108,10 @@ class MutantManager(object):
         logger.debug("constructed mutant description: %s", mutant)
 
         # generate a diff for the mutant
-        replacements_in_file = self.__sources(snapshot, mutant.mutations)
+        logger.debug("generating a unified diff for mutant")
         mutant_diff = \
-            self.__sources.replacements_to_diff(replacements_in_file)
+            self.__sources.mutations_to_diff(snapshot, mutant.mutations)
+        logger.debug("generated unified diff for mutant")
 
         # generate the Docker image on the BugZoo server
         logger.debug("provisioning container to persist mutant as a snapshot")
