@@ -108,7 +108,7 @@ class MutantManager(object):
 
         # generate a diff for the mutant
         logger.debug("generating a unified diff for mutant")
-        mutant_diff = \
+        diff = \
             self.__sources.mutations_to_diff(snapshot, list(mutant.mutations))
         logger.debug("generated unified diff for mutant")
 
