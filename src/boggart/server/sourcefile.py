@@ -4,7 +4,9 @@ import logging
 from bugzoo.core.patch import Patch
 from bugzoo.core.bug import Bug
 from bugzoo.client import Client as BugZooClient
+from rooibos import Client as RooibosClient
 
+from ..config.operators import Operators as OperatorManager
 from ..core import FileLocationRange, Replacement, Mutation
 from ..exceptions import *
 
@@ -14,8 +16,14 @@ __all__ = ['SourceFileManager']
 
 
 class SourceFileManager(object):
-    def __init__(self, client_bugzoo: BugZooClient) -> None:
+    def __init__(self,
+                 client_bugzoo: BugZooClient,
+                 client_rooibos: RooibosClient,
+                 operators: OperatorManager
+                 ) -> None:
         self.__bugzoo = client_bugzoo
+        self.__rooibos = client_rooibos
+        self.__operators = operators
         self.__cache_file_contents = {}  # type: Dict[Tuple[str, str], str]
         self.__cache_offsets = {}  # type: Dict[Tuple[str, str], List[int]]
 
@@ -86,7 +94,16 @@ class SourceFileManager(object):
         """
         Transforms a given mutation to a snapshot into a replacement.
         """
-        raise NotImplementedError
+        logger.debug("transforming mutation [%s] to replacement.", mutation)
+        operator = self.__operators[mutation.operator]
+        transformation = \
+            operator.transformations[mutation.transformation_index]
+        text_mutated = self.__rooibos.substitute(transformation.rewrite,
+                                                 mutation.arguments)
+        replacement = Replacement(mutation.location, text_mutated)
+        logger.debug("transformed mutation [%s] to replacement [%s].",
+                     mutation, replacement)
+        return replacement
 
     def replacements_to_diff(self,
                              snapshot: Bug,

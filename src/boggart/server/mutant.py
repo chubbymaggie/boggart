@@ -120,27 +120,15 @@ class MutantManager(object):
         logger.debug("Grouped mutations by file: %s", file_mutations)
 
         # transform each mutation into a replacement and group by file
-        logger.debug("Transforming mutations into replacements")
+        logger.debug("transforming mutations into replacements")
         replacements_in_file = {}  # type: Dict[str, List[Replacement]]
         for mutation in mutant.mutations:
-            location = mutation.location
-            filename = location.filename
+            filename = mutation.location.filename
             if filename not in replacements_in_file:
                 replacements_in_file[filename] = []
-
-            # FIXME use source manager
-            operator = self.__operators[mutation.operator]
-            transformation = \
-                operator.transformations[mutation.transformation_index]
-            text_mutated = self.__rooibos.substitute(transformation.rewrite,
-                                                     mutation.arguments)
-
-            replacement = Replacement(location, text_mutated)
-            logger.info("Transformed mutation, %s, to replacement: %s",
-                        mutation,
-                        replacement)
+            replacement = self.__sources.mutation_to_replacement(mutation)
             replacements_in_file[filename].append(replacement)
-        logger.debug("Transformed mutations to replacements: %s",
+        logger.debug("transformed mutations to replacements: %s",
                      replacements_in_file)
         mutant_diff = \
             self.__sources.replacements_to_diff(replacements_in_file)
