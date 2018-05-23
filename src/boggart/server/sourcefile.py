@@ -84,7 +84,7 @@ class SourceFileManager(object):
                      line_col_s)
         line_offsets = self._line_offsets(snapshot, filepath)
         line_starts_at = line_offsets[line_num - 1]
-        offset = line_starts_at + col_num - 1
+        offset = line_starts_at + col_num
         logger.debug("Transformed line-column, '%s', into character offset: %s",  # noqa: pycodestyle
                      line_col_s,
                      offset)
