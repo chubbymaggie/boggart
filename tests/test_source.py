@@ -1,9 +1,10 @@
-from typing import Callable
+from typing import Callable, List
 from unittest.mock import MagicMock
 
 import pytest
 from bugzoo.core.bug import Bug as Snapshot
 
+from boggart.core import Replacement, FileLocationRange
 from boggart.config.operators import Operators as OperatorManager
 from boggart.server.sourcefile import SourceFileManager
 
@@ -20,14 +21,14 @@ class MockSnapshot(object):
 
 
 def test_line_col_to_offset():
-    def build_convert(src: str) -> Callable[[int, int], int]:
+    def build(src: str) -> Callable[[int, int], int]:
         snapshot = MockSnapshot()
         mgr = MockSourceFileManager(src)
         def convert(line: int, col: int) -> int:
             return mgr.line_col_to_offset(snapshot, "foo.c", line, col)
         return convert
 
-    convert = build_convert("""
+    convert = build("""
 int sm = 0;
 for (int i = 0; i < 10; ++i) {
   sm += i;
@@ -38,3 +39,29 @@ for (int i = 0; i < 10; ++i) {
     assert convert(1, 11) == 11
     assert convert(2, 0) == 12
     assert convert(2, 5) == 17
+
+
+def test_apply():
+    fn = "foo.c"
+    def r(loc: str, text: str) -> Replacement:
+        loc = "{}@{}".format(fn, loc)
+        return Replacement(FileLocationRange.from_string(loc), text)
+    def apply(src: str, replacements: List[Replacement]) -> str:
+        snapshot = MockSnapshot()
+        mgr = MockSourceFileManager(src)
+        return mgr.apply(snapshot, fn, replacements)
+
+    src = """
+int sm = 0;
+for (int i = 0; i < 10; ++i) {
+  sm += i;
+}
+    """.strip()
+    replacements = [r("1:0::1:3", "unsigned int")]
+    expected = """
+unsigned int sm = 0;
+for (int i = 0; i < 10; ++i) {
+  sm += i;
+}
+    """.strip()
+    assert apply(src, replacements) == expected
