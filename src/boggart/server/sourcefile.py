@@ -74,6 +74,8 @@ class SourceFileManager(object):
         Transforms a line-column number for a given file belonging to a
         BugZoo snapshot into a zero-indexed character offset.
         """
+        assert line_num > 0
+        assert col_num >= 0
         line_col_s = "%s/%s[%d:%d]".format(snapshot.name,
                                            filepath,
                                            line_num,
