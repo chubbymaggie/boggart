@@ -28,7 +28,7 @@ class SourceFileManager(object):
         self.__cache_file_contents = {}  # type: Dict[Tuple[str, str], str]
         self.__cache_offsets = {}  # type: Dict[Tuple[str, str], List[int]]
 
-    def __line_offsets(self, snapshot: Bug, filepath: str) -> List[int]:
+    def _line_offsets(self, snapshot: Bug, filepath: str) -> List[int]:
         """
         Returns a list specifying the offset for the first character on each
         line in a given file belonging to a BugZoo snapshot.
@@ -80,7 +80,7 @@ class SourceFileManager(object):
                                            col_num)
         logger.debug("Transforming line-column, '%s', into a character offset",  # noqa: pycodestyle
                      line_col_s)
-        line_offsets = self.__line_offsets(snapshot, filepath)
+        line_offsets = self._line_offsets(snapshot, filepath)
         line_starts_at = line_offsets[line_num - 1]
         offset = line_starts_at + col_num - 1
         logger.debug("Transformed line-column, '%s', into character offset: %s",  # noqa: pycodestyle
