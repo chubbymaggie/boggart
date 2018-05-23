@@ -122,7 +122,7 @@ class SourceFileManager(object):
             fn = mutation.location.filename
             if fn not in file_to_replacements:
                 file_to_replacements[fn] = []
-            replacement = self.mutation_to_replacement(mutation)
+            replacement = self.mutation_to_replacement(snapshot, mutation)
             file_to_replacements[fn].append(replacement)
         logger.debug("transformed mutations to replacements: %s",
                      file_to_replacements)
