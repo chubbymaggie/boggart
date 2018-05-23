@@ -167,7 +167,7 @@ class SourceFileManager(object):
         """
         logger.debug("transforming replacements to diff")
         file_diffs = []  # type: List[str]
-        for (filename, replacements) in file_to_replacements.values():
+        for (filename, replacements) in file_to_replacements.items():
             original = self.read_file(snapshot, filename)
             mutated = self.apply(snapshot, filename, replacements)
             diff = ''.join(unified_diff(original.splitlines(True),
