@@ -45,6 +45,11 @@ operators:
     transformations:
       - match: ":[1]();"
         rewrite: ""
+        constraints:
+          - type: is-single-term
+            hole: "1"
+          - type: preceded-by
+            any-of: [";", "{", "}"]
 
   - name: flip-arithmetic-operator
     languages:
@@ -52,14 +57,14 @@ operators:
       - C++
       - Java
     transformations:
-      - match: ":[1] + :[2]"
-        rewrite: ":[1] - :[2]"
-      - match: ":[1] - :[2]"
-        rewrite: ":[1] + :[2]"
-      - match: ":[1] * :[2]"
-        rewrite: ":[1] / :[2]"
-      - match: ":[1] / :[2]"
-        rewrite: ":[1] * :[2]"
+      - match: "+"
+        rewrite: "-"
+      - match: "-"
+        rewrite: "+"
+      - match: "*"
+        rewrite: "/"
+      - match: "/"
+        rewrite: "*"
 
   - name: flip-boolean-operator
     languages:
@@ -67,10 +72,10 @@ operators:
       - C++
       - Java
     transformations:
-      - match: ":[1] && :[2]"
-        rewrite: ":[1] || :[2]"
-      - match: ":[1] || :[2]"
-        rewrite: ":[1] && :[2]"
+      - match: "&&"
+        rewrite: "||"
+      - match: "||"
+        rewrite: "&&"
 
   - name: flip-relational-operator
     languages:
@@ -78,18 +83,18 @@ operators:
       - C++
       - Java
     transformations:
-      - match: ":[1] < :[2]"
-        rewrite: ":[1] >= :[2]"
-      - match: ":[1] >= :[2]"
-        rewrite: ":[1] < :[2]"
-      - match: ":[1] > :[2]"
-        rewrite: ":[1] <= :[2]"
-      - match: ":[1] <= :[2]"
-        rewrite: ":[1] > :[2]"
-      - match: ":[1] == :[2]"
-        rewrite: ":[1] != :[2]"
-      - match: ":[1] != :[2]"
-        rewrite: ":[1] == :[2]"
+      - match: "<"
+        rewrite: ">="
+      - match: ">="
+        rewrite: "<"
+      - match: ">"
+        rewrite: "<="
+      - match: "<="
+        rewrite: ">"
+      - match: "=="
+        rewrite: "!="
+      - match: "!="
+        rewrite: "=="
 
   - name: undo-transformation
     languages:
@@ -99,6 +104,13 @@ operators:
     transformations:
       - match: ":[1] = :[2](:[3]);"
         rewrite: ":[1] = :[3];"
+        constraints:
+          - type: is-single-term
+            hole: "1"
+          - type: is-single-term
+            hole: "2"
+          - type: is-single-term
+            hole: "3"
 
   - name: delete-conditional-control-flow
     languages:

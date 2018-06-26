@@ -7,11 +7,13 @@ import logging
 from bugzoo.core.bug import Bug
 from bugzoo.core.patch import Patch
 from bugzoo.client import Client as BugZooClient
+from bugzoo.exceptions import BugZooException
 from rooibos import Client as RooibosClient
 
 from .sourcefile import SourceFileManager
 from ..config.operators import Operators as OperatorManager
 from ..core import Mutant, Mutation, Replacement
+from ..exceptions import BuildFailure
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,20 @@ class MutantManager(object):
         self.__rooibos = client_rooibos
         self.__operators = operators
         self.__sources = sources
+
+    def clear(self) -> None:
+        """
+        Destroys all mutants that are registered with this manager.
+        """
+        logger.info("destroying all registered mutants")
+        try:
+            uuids = list(self)
+            for uuid in uuids:
+                del self[uuid]
+        except Exception:
+            logger.exception("failed to destroy all registered mutants")
+            raise
+        logger.info("destroyed all registered mutants")
 
     def __iter__(self) -> Iterator[UUID]:
         """
@@ -84,8 +100,11 @@ class MutantManager(object):
 
         Returns:
             a description of the generated mutant.
+
+        Raises:
+            BuildFailure: if the mutant failed to build.
         """
-        logger.info("Generating mutant of snapshot '%s' by applying mutations: %s",  # noqa: pycodestyle
+        logger.info("generating mutant of snapshot '%s' by applying mutations: %s",  # noqa: pycodestyle
                     snapshot.name,
                     ', '.join([repr(m) for m in mutations]))
         bz = self.__bugzoo
@@ -121,7 +140,14 @@ class MutantManager(object):
             logger.debug("applying mutation patch to original source code.")
             bz.containers.patch(container, diff)
             logger.debug("applied mutation patch to original source code.")
+            try:
+                logger.debug("attempting to build source code for mutant.")
+                outcome = bz.containers.build(container)
+                logger.debug("built source code for mutant.")
+            except BugZooException:
+                raise BuildFailure
             bz.containers.persist(container, mutant.docker_image)
+            logger.debug("persisted mutant to Docker image")
         finally:
             del bz.containers[container.uid]
             logger.debug("destroyed temporary container [%s] for mutant [%s].",
